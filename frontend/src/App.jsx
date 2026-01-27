@@ -1374,13 +1374,7 @@ const Login = ({ setUser, logoUrl }) => {
     <div className="flex justify-center items-center min-h-[80vh] bg-ferreLight">
       <div className="bg-white p-6 md:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
         <div className="text-center mb-8">
-          {logoUrl ? (
-            <img src={`${SERVER_URL}${logoUrl}`} alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
-          ) : (
-            <div className="bg-ferreRed w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center mx-auto mb-4 text-white text-xl md:text-2xl font-black shadow-lg shadow-red-200">
-              FC
-            </div>
-          )}
+          <img src="/LoFerTrasn.png" alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-gray-800">Bienvenido</h2>
           <p className="text-gray-500 mt-2">Ingresa a tu cuenta para continuar</p>
         </div>
@@ -1443,11 +1437,7 @@ const ForgotPassword = ({ logoUrl }) => {
     <div className="flex justify-center items-center min-h-[80vh] bg-ferreLight">
       <div className="bg-white p-6 md:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
         <div className="text-center mb-8">
-          {logoUrl ? (
-            <img src={`${SERVER_URL}${logoUrl}`} alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
-          ) : (
-            <div className="bg-ferreRed w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center mx-auto mb-4 text-white text-xl md:text-2xl font-black shadow-lg shadow-red-200">FC</div>
-          )}
+          <img src="/LoFerTrasn.png" alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-gray-800">Recuperar Contraseña</h2>
           <p className="text-gray-500 mt-2">Ingresa tu correo para recibir una nueva contraseña.</p>
         </div>
@@ -1503,7 +1493,7 @@ const ResetPassword = ({ logoUrl }) => {
         <div className="flex justify-center items-center min-h-[80vh] bg-ferreLight">
             <div className="bg-white p-6 md:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
                 <div className="text-center mb-8">
-                    {logoUrl ? ( <img src={`${SERVER_URL}${logoUrl}`} alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" /> ) : ( <div className="bg-ferreRed w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center mx-auto mb-4 text-white text-xl md:text-2xl font-black shadow-lg shadow-red-200">FC</div> )}
+                    <img src="/LoFerTrasn.png" alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
                     <h2 className="text-3xl font-bold text-gray-800">Nueva Contraseña</h2>
                     <p className="text-gray-500 mt-2">Ingresa tu nueva contraseña.</p>
                 </div>
@@ -1561,13 +1551,7 @@ const Register = ({ setUser, logoUrl }) => {
     <div className="flex justify-center items-center min-h-[80vh] bg-ferreLight">
       <div className="bg-white p-6 md:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
         <div className="text-center mb-8">
-          {logoUrl ? (
-            <img src={`${SERVER_URL}${logoUrl}`} alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
-          ) : (
-            <div className="bg-ferreRed w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center mx-auto mb-4 text-white text-xl md:text-2xl font-black shadow-lg shadow-red-200">
-              FC
-            </div>
-          )}
+          <img src="/LoFerTrasn.png" alt="FerreCenter" className="h-16 md:h-24 object-contain mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-gray-800">Crear Cuenta</h2>
           <p className="text-gray-500 mt-2">Únete a FerreCenter hoy</p>
         </div>
