@@ -76,7 +76,6 @@ router.post('/forgot-password', async (req, res) => {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-        tls: { rejectUnauthorized: false },
       });
       await transporter.sendMail({
         from: `"Soporte FerreCenter" <servicios.ferrecenter@gmail.com>`,
@@ -147,7 +146,6 @@ router.post('/quote', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-      tls: { rejectUnauthorized: false },
     });
     await transporter.sendMail({
       from: `"Cotizaciones Web" <${process.env.EMAIL_USER}>`,

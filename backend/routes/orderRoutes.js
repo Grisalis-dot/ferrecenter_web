@@ -195,7 +195,6 @@ router.put('/:id/pay', protect, async (req, res) => {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-        tls: { rejectUnauthorized: false },
       });
 
       // --- GENERAR PDF DE LA FACTURA (NUEVO DISEÑO) ---
@@ -280,7 +279,6 @@ router.put('/:id/status', protect, admin, async (req, res) => {
         const transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-          tls: { rejectUnauthorized: false },
         });
 
         const orderIdFormatted = order.orderId ? `FAC - ${order.orderId.toString().padStart(3, '0')}` : order._id.toString().substring(0, 8);
@@ -432,7 +430,6 @@ router.post('/send-with-proof', protect, upload.single('proof'), async (req, res
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-      tls: { rejectUnauthorized: false },
     });
 
     // --- GENERAR PDF DE LA FACTURA (NUEVO DISEÑO) ---
