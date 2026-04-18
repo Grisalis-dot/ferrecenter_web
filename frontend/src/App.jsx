@@ -1657,7 +1657,7 @@ const Help = () => {
         <div className="mt-12 bg-ferreDark text-white p-8 rounded-2xl text-center shadow-2xl">
           <h3 className="text-2xl font-bold mb-4">¿Aún necesitas ayuda?</h3>
           <p className="text-gray-300 mb-6">Nuestro equipo de soporte está disponible 24/7 para atenderte.</p>
-          <a href="mailto:soporte@ferrecenter.com" className="inline-block bg-ferreRed hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-colors">
+          <a href="mailto:servicios.ferrecenter@gmail.com" className="inline-block bg-ferreRed hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-colors">
             Contáctanos
           </a>
         </div>
