@@ -1,9 +1,13 @@
-const mongoose = require('mongoose');
+const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');
 const path = require('path');
-const Category = require('./models/Category');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const categories = [
   {
@@ -74,13 +78,17 @@ const categories = [
 
 const seedCategories = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Conectado a MongoDB');
+    console.log('🚀 Iniciando migración de categorías a Supabase...');
 
-    await Category.deleteMany(); // Limpiar existentes para no duplicar
+    // 1. Limpiar existentes (TRUNCATE requiere permisos, usamos delete sin filtro)
+    const { error: deleteError } = await supabase.from('categories').delete().neq('id', 0);
+    if (deleteError) throw deleteError;
     console.log('🗑️  Categorías anteriores eliminadas');
 
-    await Category.insertMany(categories);
+    // 2. Insertar las nuevas categorías
+    const { error: insertError } = await supabase.from('categories').insert(categories);
+    if (insertError) throw insertError;
+
     console.log('🎉 Categorías importadas exitosamente');
 
     process.exit();

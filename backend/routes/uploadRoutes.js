@@ -1,44 +1,42 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const router = express.Router();
 
-// Configuración de almacenamiento
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename(req, file, cb) {
-    // Nombre único: nombreoriginal-fecha.extensión
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
+// Usamos almacenamiento en memoria para procesar la subida a Supabase
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Filtro para validar que sea imagen
-function checkFileType(file, cb) {
-  const filetypes = /jpg|jpeg|png|webp/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
+// POST /api/upload - Sube la imagen a Supabase Storage
+router.post('/', upload.single('image'), async (req, res) => {
+  try {
+    const supabase = req.app.get('supabase');
+    const file = req.file;
 
-  if (extname && mimetype) {
-    return cb(null, true);
-  } else {
-    cb('Error: ¡Solo imágenes!');
+    if (!file) {
+      return res.status(400).send('No se ha subido ninguna imagen');
+    }
+
+    const fileName = `${Date.now()}-${file.originalname}`;
+    
+    // Subir al bucket 'ferrecenter-images' que creamos antes
+    const { data, error } = await supabase.storage
+      .from('ferrecenter-images')
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    // Obtener URL pública de la imagen
+    const { data: publicUrlData } = supabase.storage
+      .from('ferrecenter-images')
+      .getPublicUrl(fileName);
+
+    res.send(publicUrlData.publicUrl);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-}
-
-const upload = multer({
-  storage,
-  fileFilter: function (req, file, cb) {
-    checkFileType(file, cb);
-  },
-});
-
-// La ruta POST /api/upload
-router.post('/', upload.single('image'), (req, res) => {
-  // Devolvemos la ruta donde quedó guardada la imagen
-  // Reemplazamos backslashes de Windows por slashes normales
-  res.send(`/${req.file.path.replace(/\\/g, '/')}`);
 });
 
 module.exports = router;

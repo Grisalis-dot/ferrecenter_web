@@ -1,34 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const CompanyProfile = require('../models/CompanyProfile');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // Obtener perfil de la empresa
 router.get('/', async (req, res) => {
-  let profile = await CompanyProfile.findOne();
-  if (!profile) {
-    profile = await CompanyProfile.create({});
+  try {
+    const supabase = req.app.get('supabase');
+    const { data: profile, error } = await supabase.from('company_profile').select('*').single();
+    
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 es "no rows found"
+    
+    res.json(profile || {});
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener perfil de empresa' });
   }
-  res.json(profile);
 });
 
 // Actualizar perfil (Solo Admin)
 router.post('/', protect, admin, async (req, res) => {
+  const supabase = req.app.get('supabase');
   const { name, nit, address, phone, email, logoUrl } = req.body;
-  let profile = await CompanyProfile.findOne();
 
-  if (profile) {
-    profile.name = name || profile.name;
-    profile.nit = nit || profile.nit;
-    profile.address = address || profile.address;
-    profile.phone = phone || profile.phone;
-    profile.email = email || profile.email;
-    profile.logoUrl = logoUrl || profile.logoUrl;
-    const updatedProfile = await profile.save();
-    res.json(updatedProfile);
-  } else {
-    const newProfile = await CompanyProfile.create({ name, nit, address, phone, email, logoUrl });
-    res.json(newProfile);
+  try {
+    const { data, error } = await supabase
+      .from('company_profile')
+      .upsert({ 
+        id: 1, // Siempre usamos el mismo ID para el perfil único
+        name, nit, address, phone, email, 
+        logo_url: logoUrl 
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar perfil de empresa' });
   }
 });
 

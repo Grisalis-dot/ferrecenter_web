@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { ShoppingCart, User, LogOut, PackagePlus, Search, Trash2, CreditCard, ArrowRight, Star, Image as ImageIcon, Eye, EyeOff, Menu, MapPin, Mail, Instagram, Camera, Filter, Edit, X, FileText, ShoppingBag, Package, Settings, Users, Clock, CheckCircle } from 'lucide-react';
@@ -9,10 +9,16 @@ import CartPage from './components/CartPage';
 const SERVER_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const API = axios.create({ baseURL: `${SERVER_URL}/api` });
 
+// Helper para manejar URLs de imágenes (Supabase vs Local)
+const getImageUrl = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${SERVER_URL}${url}`;
+};
+
 // --- COMPONENTES ---
 
 // Barra de Navegación
-const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm }) => {
+const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm, cartIconRef }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -46,7 +52,7 @@ const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm }) => {
             </Link>
           )}
           
-          <Link to="/cart" className="flex items-center gap-2 hover:text-ferreRed transition-colors relative group">
+          <Link to="/cart" ref={cartIconRef} className="flex items-center gap-2 hover:text-ferreRed transition-colors relative group">
             <div className="relative">
               <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
             {cartCount > 0 && (
@@ -66,7 +72,7 @@ const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm }) => {
                 <span className="text-sm font-bold text-gray-800">{user.name}</span>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-300">
-                  {user.imageUrl ? <img src={`${SERVER_URL}${user.imageUrl}`} alt="Perfil" className="w-full h-full object-cover" /> : <User className="w-full h-full p-2 text-gray-500" />}
+                  {user.imageUrl ? <img src={getImageUrl(user.imageUrl)} alt="Perfil" className="w-full h-full object-cover" /> : <User className="w-full h-full p-2 text-gray-500" />}
                 </div>
               </Link>
               <button onClick={logout} className="flex items-center gap-1 text-sm bg-ferreLight hover:bg-red-100 hover:text-ferreRed px-3 py-2 rounded-lg transition-colors">
@@ -87,7 +93,7 @@ const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm }) => {
           <Link to="/" className="hover:text-ferreRed transition-colors">Home</Link>
           <Link to="/nosotros" className="hover:text-ferreRed transition-colors">Nosotros</Link>
           <Link to="/catalogo" className="hover:text-ferreRed transition-colors">Catálogo</Link>
-          <Link to="/cotizar" className="hover:text-ferreRed transition-colors">Cotizar</Link>
+          {user && <Link to="/cotizar" className="hover:text-ferreRed transition-colors">Cotizar</Link>}
           <Link to="/ofertas" className="hover:text-ferreRed transition-colors">Ofertas</Link>
           <Link to="/contacto" className="hover:text-ferreRed transition-colors">Contacto</Link>
         </div>
@@ -115,7 +121,7 @@ const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm }) => {
           <Link to="/" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Home</Link>
           <Link to="/nosotros" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Nosotros</Link>
           <Link to="/catalogo" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Catálogo</Link>
-          <Link to="/cotizar" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Cotizar</Link>
+          {user && <Link to="/cotizar" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Cotizar</Link>}
           <Link to="/ofertas" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Ofertas</Link>
           <Link to="/contacto" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Contacto</Link>
           {user && <Link to="/profile" onClick={() => setIsSidebarOpen(false)} className="block text-lg font-medium text-gray-700 hover:text-ferreRed transition-colors">Mi Perfil</Link>}
@@ -137,9 +143,8 @@ const Navbar = ({ user, cartCount, logout, searchTerm, setSearchTerm }) => {
 // Hero Section (Banner Principal)
 const Hero = () => (
   <div className="relative bg-ferreDark text-white py-16 md:py-24 px-4 md:px-6 mb-12 overflow-hidden shadow-2xl">
-    <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-ferreDark to-ferreRed/30 z-10"></div>
-    {/* Imagen de fondo simulada con patrón o color */}
-    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-40"></div>
+    <div className="absolute inset-0 bg-gradient-to-r from-black via-ferreDark to-ferreRed z-10 opacity-90"></div>
+    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 z-0"></div>
     
     <div className="container mx-auto relative z-20 flex flex-col md:flex-row items-center">
       <div className="md:w-1/2">
@@ -197,7 +202,7 @@ const Categories = () => {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {categories.map((cat) => (
-            <div key={cat._id} onClick={() => navigate(`/catalogo?category=${encodeURIComponent(cat.name)}`)} className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl border border-gray-100 text-center cursor-pointer transition-all hover:-translate-y-1 group hover:border-ferreRed/30 h-full flex flex-col items-center justify-center">
+            <div key={cat._id || cat.id} onClick={() => navigate(`/catalogo?category=${encodeURIComponent(cat.name)}`)} className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl border border-gray-100 text-center cursor-pointer transition-all hover:-translate-y-1 group hover:border-ferreRed/30 h-full flex flex-col items-center justify-center">
               <div className="text-4xl mb-3 group-hover:scale-110 transition-transform inline-block">{getIcon(cat.name)}</div>
               <h3 className="font-bold text-ferreDark text-sm group-hover:text-ferreRed transition-colors">{cat.name}</h3>
             </div>
@@ -209,13 +214,19 @@ const Categories = () => {
 };
 
 // Tarjeta de Producto
-const ProductCard = ({ product, addToCart }) => (
+const ProductCard = ({ product, addToCart }) => {
+  const hasOffer = product.isOffer && product.offerPrice;
+  const currentPrice = hasOffer ? product.offerPrice : product.price;
+
+  return (
   <div className="group bg-white border border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col overflow-hidden relative hover:-translate-y-1">
     <div className="relative h-48 md:h-64 bg-gray-50 flex items-center justify-center overflow-hidden p-6">
       <img 
-        src={`${SERVER_URL}${product.imageUrl}`} 
+        src={getImageUrl(product.imageUrl || product.image_url)} 
         alt={product.name} 
-        className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" 
+        className="h-full w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 select-none pointer-events-none" 
+        onContextMenu={(e) => e.preventDefault()}
+        draggable="false"
         onError={(e) => e.target.src = 'https://via.placeholder.com/300?text=Sin+Imagen'} 
       />
       <div className="absolute top-4 left-4">
@@ -228,32 +239,34 @@ const ProductCard = ({ product, addToCart }) => (
         </span>
       </div>
       <div className="absolute top-4 right-4">
-        <span className="bg-white/90 backdrop-blur text-gray-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm border border-gray-100">
-          {product.category}
+        <span className={`text-xs font-bold px-3 py-1 rounded-full shadow-sm border ${hasOffer ? 'bg-orange-500 text-white border-orange-600 animate-pulse' : 'bg-white/90 backdrop-blur text-gray-600 border-gray-100'}`}>
+          {hasOffer ? 'OFERTA' : product.category}
         </span>
       </div>
     </div>
     <div className="p-5 flex flex-col flex-grow">
-      <div className="flex items-center gap-1 mb-2">
-        {[1,2,3,4,5].map(i => <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />)}
-        <span className="text-xs text-gray-400 ml-1">(4.8)</span>
-      </div>
       <h3 className="text-lg font-bold text-ferreDark mb-2 group-hover:text-ferreRed transition-colors">{product.name}</h3>
       <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-grow">{product.description}</p>
       <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
         <div className="flex flex-col">
           <span className="text-xs text-gray-400 uppercase font-semibold">Precio</span>
-          <span className="text-xl font-extrabold text-ferreRed">${product.price.toLocaleString('es-CO')}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-extrabold text-ferreRed">${currentPrice.toLocaleString('es-CO')}</span>
+            {hasOffer && (
+              <span className="text-sm text-gray-400 line-through decoration-red-500/50">${product.price.toLocaleString('es-CO')}</span>
+            )}
+          </div>
         </div>
         <button 
-          onClick={() => addToCart(product)} disabled={product.stock <= 0}
+          onClick={(e) => addToCart(product, e)} disabled={product.stock <= 0}
           className="bg-gradient-to-r from-ferreDark to-[#1a1a1a] hover:from-ferreRed hover:to-[#991116] text-white p-3 rounded-xl shadow-lg hover:shadow-red-500/40 transition-all duration-300 transform active:scale-95 flex items-center gap-2">
           <ShoppingCart size={18} /> <span className="text-sm font-bold">Comprar</span>
         </button>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // --- PÁGINAS ---
 
@@ -400,7 +413,7 @@ const Catalogo = ({ addToCart, searchTerm }) => {
   );
 };
 
-const Cotizar = () => {
+const Cotizar = ({ user }) => {
   const [sent, setSent] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', identification: '', department: '', city: '', address: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -409,7 +422,8 @@ const Cotizar = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await API.post('/users/quote', formData);
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      await API.post('/users/quote', formData, config);
       setSent(true);
     } catch (error) {
       alert('Error al enviar la cotización. Intente nuevamente.');
@@ -443,7 +457,7 @@ const Cotizar = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-                <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+                <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required autoComplete="email" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -478,9 +492,8 @@ const Ofertas = ({ addToCart }) => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    // Simulación: filtramos productos con precio menor a 50000 como si fueran ofertas
     API.get('/products')
-      .then(res => setProducts(res.data.filter(p => p.price < 50000)))
+      .then(res => setProducts(res.data.filter(p => p.isOffer)))
       .catch(err => console.error("Error cargando productos:", err));
   }, []);
 
@@ -538,8 +551,8 @@ const UserProfile = ({ user, setUser }) => {
     address: user.address || '',
     phone: user.phone || '',
     identification: user.identification || '',
-    password: '',
-    confirmPassword: '',
+    password: '', // Garantizamos que inicie vacío
+    confirmPassword: '', // Garantizamos que inicie vacío
     imageUrl: user.imageUrl || ''
   });
   const [uploading, setUploading] = useState(false);
@@ -570,7 +583,7 @@ const UserProfile = ({ user, setUser }) => {
         const { data } = await API.get('/orders/myorders', config);
         setMyOrders(data);
       } catch (error) {
-        console.error("Error cargando mis pedidos:", error);
+        console.error("Error cargando mis pedidos:", error.message);
       }
     };
     fetchMyOrders();
@@ -614,7 +627,7 @@ const UserProfile = ({ user, setUser }) => {
             <div className="md:col-span-1 flex flex-col items-center">
               <div className="relative w-40 h-40 rounded-full bg-gray-100 border-4 border-white shadow-lg overflow-hidden mb-4 group">
                 {formData.imageUrl ? (
-                  <img src={`${SERVER_URL}${formData.imageUrl}`} alt="Perfil" className="w-full h-full object-cover" />
+                  <img src={getImageUrl(formData.imageUrl)} alt="Perfil" className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-full h-full p-8 text-gray-400" />
                 )}
@@ -635,13 +648,13 @@ const UserProfile = ({ user, setUser }) => {
                 <div><label className="text-sm font-medium text-gray-700">Identificación</label><input type="text" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" value={formData.identification} onChange={e => setFormData({...formData, identification: e.target.value})} /></div>
                 <div><label className="text-sm font-medium text-gray-700">Teléfono</label><input type="text" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} /></div>
                 <div><label className="text-sm font-medium text-gray-700">Dirección</label><input type="text" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} /></div>
-                <div className="md:col-span-2"><label className="text-sm font-medium text-gray-700">Correo Electrónico</label><input type="email" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} /></div>
+                <div className="md:col-span-2"><label className="text-sm font-medium text-gray-700">Correo Electrónico</label><input type="email" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} autoComplete="email" /></div>
               </div>
 
               <h3 className="font-bold text-gray-700 border-b pb-2 mb-4 mt-6">Seguridad (Opcional)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="text-sm font-medium text-gray-700">Nueva Contraseña</label><input type="password" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" placeholder="Dejar en blanco para mantener" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} /></div>
-                <div><label className="text-sm font-medium text-gray-700">Confirmar Contraseña</label><input type="password" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" placeholder="Repetir nueva contraseña" value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} /></div>
+                <div><label className="text-sm font-medium text-gray-700">Nueva Contraseña</label><input type="password" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" placeholder="Dejar en blanco para mantener" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} autoComplete="new-password" /></div>
+                <div><label className="text-sm font-medium text-gray-700">Confirmar Contraseña</label><input type="password" className="w-full border p-2 rounded focus:ring-2 focus:ring-ferreRed outline-none" placeholder="Repetir nueva contraseña" value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} autoComplete="new-password" /></div>
               </div>
 
               <button type="submit" className="w-full bg-ferreRed text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors mt-6 shadow-lg">
@@ -688,9 +701,12 @@ const UserProfile = ({ user, setUser }) => {
                     </div>
                     <div className="bg-gray-50 p-3 rounded text-sm text-gray-600">
                       <p className="font-semibold mb-1">Productos:</p>
-                      <ul className="list-disc list-inside">
-                        {order.orderItems.map((item, idx) => (
-                          <li key={idx}>{item.name} (x{item.qty})</li>
+                      <ul className="space-y-2">
+                        {order.orderItems && order.orderItems.map((item, idx) => (
+                          <li key={idx} className="flex items-center gap-3">
+                            <img src={getImageUrl(item.imageUrl)} alt="" className="w-8 h-8 object-contain rounded bg-white border" />
+                            <span>{item.name} <span className="text-gray-400 font-bold">x{item.qty}</span></span>
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -707,12 +723,11 @@ const UserProfile = ({ user, setUser }) => {
 };
 
 const AdminPanel = ({ user }) => {
-  const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', subcategory: '', stock: '', minStock: '', imageUrl: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', price: '', category: '', subcategory: '', stock: '', minStock: '', imageUrl: '', isOffer: false, offerPrice: '' });
   const [companyData, setCompanyData] = useState({ name: '', nit: '', address: '', phone: '', email: '', logoUrl: '' });
   const [userFormData, setUserFormData] = useState({ name: '', email: '', isAdmin: false, address: '', phone: '', identification: '', password: '' });
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [quotes, setQuotes] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -720,7 +735,7 @@ const AdminPanel = ({ user }) => {
   const [logoUploading, setLogoUploading] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory', 'orders', 'quotes'
+  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory', 'orders', 'users', 'settings'
   const [inventorySearch, setInventorySearch] = useState('');
   const [inventoryCategory, setInventoryCategory] = useState('');
   const [showOutOfStock, setShowOutOfStock] = useState(false);
@@ -730,7 +745,6 @@ const AdminPanel = ({ user }) => {
     API.get('/categories').then(res => setCategories(res.data)).catch(console.error);
     fetchProducts();
     fetchOrders();
-    fetchQuotes();
     fetchUsers();
     fetchCompanyData();
   }, []);
@@ -754,17 +768,7 @@ const AdminPanel = ({ user }) => {
       const { data } = await API.get('/orders', config);
       setOrders(data);
     } catch (error) {
-      console.error("Error cargando órdenes:", error);
-    }
-  };
-
-  const fetchQuotes = async () => {
-    try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const { data } = await API.get('/users/quotes', config);
-      setQuotes(data);
-    } catch (error) {
-      console.error("Error cargando cotizaciones:", error);
+        console.error("Error cargando órdenes:", error.message);
     }
   };
 
@@ -774,7 +778,7 @@ const AdminPanel = ({ user }) => {
       const { data } = await API.get('/users', config);
       setUsersList(data);
     } catch (error) {
-      console.error("Error cargando usuarios:", error);
+        console.error("Error cargando usuarios:", error.message);
     }
   };
 
@@ -783,12 +787,12 @@ const AdminPanel = ({ user }) => {
       const { data } = await API.get('/company');
       setCompanyData(data);
     } catch (error) {
-      console.error("Error cargando datos de empresa:", error);
+        console.error("Error cargando datos de empresa:", error.message);
     }
   };
 
   const handleCategoryChange = (e) => {
-    const selectedCat = categories.find(c => c.name === e.target.value);
+    const selectedCat = categories.find(c => (c.id || c._id).toString() === e.target.value);
     setFormData({ ...formData, category: e.target.value, subcategory: '' });
     setSubcategories(selectedCat ? selectedCat.subcategories : []);
   };
@@ -805,7 +809,7 @@ const AdminPanel = ({ user }) => {
         await API.post('/products', formData, config);
         alert('✅ Producto agregado correctamente');
       }
-      setFormData({ name: '', description: '', price: '', category: '', subcategory: '', stock: '', minStock: '', imageUrl: '' });
+      setFormData({ name: '', description: '', price: '', category: '', subcategory: '', stock: '', minStock: '', imageUrl: '', isOffer: false, offerPrice: '' });
       fetchProducts();
     } catch (error) {
       alert('❌ Error al guardar producto: ' + (error.response?.data?.message || error.message));
@@ -875,7 +879,9 @@ const AdminPanel = ({ user }) => {
       subcategory: product.subcategory || '',
       stock: product.stock,
       minStock: product.minStock || '',
-      imageUrl: product.imageUrl
+      imageUrl: product.imageUrl,
+      isOffer: product.isOffer || false,
+      offerPrice: product.offerPrice || ''
     });
     // Cargar subcategorías correspondientes
     const selectedCat = categories.find(c => c.name === product.category);
@@ -897,7 +903,7 @@ const AdminPanel = ({ user }) => {
 
   const cancelEdit = () => {
     setEditId(null);
-    setFormData({ name: '', description: '', price: '', category: '', subcategory: '', stock: '', minStock: '', imageUrl: '' });
+    setFormData({ name: '', description: '', price: '', category: '', subcategory: '', stock: '', minStock: '', imageUrl: '', isOffer: false, offerPrice: '' });
   };
 
   const handleUserEdit = (userItem) => {
@@ -954,7 +960,7 @@ const AdminPanel = ({ user }) => {
       await fetchOrders(); // Recargar órdenes para reflejar el cambio
       alert('¡Estado del pedido actualizado!');
     } catch (error) {
-      console.error("Error actualizando estado:", error);
+      console.error("Error actualizando estado:", error.message);
       alert('No se pudo actualizar el estado del pedido.');
     }
   };
@@ -967,7 +973,7 @@ const AdminPanel = ({ user }) => {
         await fetchOrders(); // Recargar la lista
         alert('✅ Pedido eliminado correctamente.');
       } catch (error) {
-        console.error("Error eliminando pedido:", error);
+        console.error("Error eliminando pedido:", error.message);
         alert('❌ Error al eliminar el pedido.');
       }
     }
@@ -996,9 +1002,6 @@ const AdminPanel = ({ user }) => {
           <button onClick={() => setActiveTab('orders')} className={`flex-shrink-0 md:flex-1 min-w-[120px] py-4 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'orders' ? 'text-ferreRed border-b-2 border-ferreRed bg-red-50' : 'text-gray-500 hover:text-gray-700'}`}>
             <ShoppingBag size={20} /> Pedidos ({orders.length})
           </button>
-          <button onClick={() => setActiveTab('quotes')} className={`flex-shrink-0 md:flex-1 min-w-[120px] py-4 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'quotes' ? 'text-ferreRed border-b-2 border-ferreRed bg-red-50' : 'text-gray-500 hover:text-gray-700'}`}>
-            <FileText size={20} /> Cotizaciones ({quotes.length})
-          </button>
           <button onClick={() => setActiveTab('users')} className={`flex-shrink-0 md:flex-1 min-w-[120px] py-4 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'users' ? 'text-ferreRed border-b-2 border-ferreRed bg-red-50' : 'text-gray-500 hover:text-gray-700'}`}>
             <Users size={20} /> Usuarios ({usersList.length})
           </button>
@@ -1025,7 +1028,7 @@ const AdminPanel = ({ user }) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
                     <select className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed outline-none shadow-sm" value={formData.category} onChange={handleCategoryChange} required>
                       <option value="">Seleccionar Categoría</option>
-                      {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+                      {categories.map(cat => <option key={cat._id || cat.id} value={cat._id || cat.id}>{cat.name}</option>)}
                     </select>
                   </div>
                   {subcategories.length > 0 && (
@@ -1051,6 +1054,20 @@ const AdminPanel = ({ user }) => {
                       <input type="number" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed outline-none shadow-sm" value={formData.minStock} onChange={e => setFormData({...formData, minStock: e.target.value})} placeholder="0" />
                     </div>
                   </div>
+                </div>
+                
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <input type="checkbox" id="isOffer" checked={formData.isOffer} onChange={e => setFormData({...formData, isOffer: e.target.checked})} className="w-4 h-4 text-ferreRed" />
+                    <label htmlFor="isOffer" className="text-sm font-bold text-orange-800">¿Es una Oferta Especial?</label>
+                  </div>
+                  {formData.isOffer && (
+                    <div>
+                      <label className="block text-xs font-bold text-orange-700 mb-1 uppercase">Precio de Oferta (Especial)</label>
+                      <input type="number" className="w-full border border-orange-300 p-2 rounded focus:ring-2 focus:ring-orange-500 outline-none" value={formData.offerPrice} onChange={e => setFormData({...formData, offerPrice: e.target.value})} placeholder="Ej: 45000" required={formData.isOffer} />
+                      <p className="text-[10px] text-orange-600 mt-1">* Se mostrará este precio y el original tachado.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -1120,7 +1137,7 @@ const AdminPanel = ({ user }) => {
                       {filteredInventory.slice(0, visibleCount).map(product => (
                         <tr key={product._id} className="hover:bg-gray-50 transition-colors border-b last:border-none">
                           <td className="p-4 flex items-center gap-3">
-                            <img src={`${SERVER_URL}${product.imageUrl}`} alt="" className="w-10 h-10 object-contain rounded bg-white border" />
+                          <img src={getImageUrl(product.imageUrl)} alt="" className="w-10 h-10 object-contain rounded bg-white border" />
                             <div>
                               <p className="font-bold">{product.name}</p>
                               {product.price < 50000 && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold">🔥 Oferta</span>}
@@ -1203,41 +1220,14 @@ const AdminPanel = ({ user }) => {
                       </div>
                       <div className="mt-3 border-t pt-2">
                         <p className="text-xs font-bold text-gray-500 uppercase mb-1">Productos:</p>
-                        <ul className="text-sm text-gray-700 space-y-1">
-                          {order.orderItems.map((item, idx) => (
-                            <li key={idx}>• {item.name} (x{item.qty})</li>
+                        <ul className="text-sm text-gray-700 space-y-2">
+                          {order.orderItems && order.orderItems.map((item, idx) => (
+                            <li key={idx} className="flex items-center gap-3">
+                              <img src={getImageUrl(item.imageUrl)} alt="" className="w-8 h-8 object-contain rounded bg-white border" />
+                              <span>{item.name} <span className="font-bold text-ferreRed">x{item.qty}</span></span>
+                            </li>
                           ))}
                         </ul>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'quotes' && (
-            <div>
-              <h3 className="text-xl font-semibold mb-6 text-gray-700 border-b pb-2">Solicitudes de Cotización</h3>
-              {quotes.length === 0 ? (
-                <p className="text-gray-500">No hay cotizaciones registradas.</p>
-              ) : (
-                <div className="space-y-4">
-                  {quotes.map(quote => (
-                    <div key={quote._id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-bold text-lg">{quote.name}</p>
-                          <p className="text-sm text-gray-500">{new Date(quote.createdAt).toLocaleDateString()}</p>
-                          <p className="text-sm text-gray-600">{quote.email} | CC: {quote.identification}</p>
-                        </div>
-                        <div className="text-right text-sm text-gray-600">
-                          <p>{quote.city}, {quote.department}</p>
-                          <p>{quote.address}</p>
-                        </div>
-                      </div>
-                      <div className="mt-3 bg-white p-3 rounded border border-gray-100">
-                        <p className="text-sm text-gray-700 italic">"{quote.message}"</p>
                       </div>
                     </div>
                   ))}
@@ -1256,7 +1246,7 @@ const AdminPanel = ({ user }) => {
                   </div>
                   <form onSubmit={handleUserSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="text-sm font-medium">Nombre</label><input type="text" className="w-full border p-2 rounded" value={userFormData.name} onChange={e => setUserFormData({...userFormData, name: e.target.value})} required /></div>
-                    <div><label className="text-sm font-medium">Email</label><input type="email" className="w-full border p-2 rounded" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} required /></div>
+                    <div><label className="text-sm font-medium">Email</label><input type="email" className="w-full border p-2 rounded" value={userFormData.email} onChange={e => setUserFormData({...userFormData, email: e.target.value})} required autoComplete="email" /></div>
                     <div><label className="text-sm font-medium">Teléfono</label><input type="text" className="w-full border p-2 rounded" value={userFormData.phone} onChange={e => setUserFormData({...userFormData, phone: e.target.value})} /></div>
                     <div><label className="text-sm font-medium">Identificación</label><input type="text" className="w-full border p-2 rounded" value={userFormData.identification} onChange={e => setUserFormData({...userFormData, identification: e.target.value})} /></div>
                     <div><label className="text-sm font-medium">Nueva Contraseña (Opcional)</label><input type="password" className="w-full border p-2 rounded" placeholder="Dejar en blanco para mantener" value={userFormData.password} onChange={e => setUserFormData({...userFormData, password: e.target.value})} /></div>
@@ -1288,7 +1278,7 @@ const AdminPanel = ({ user }) => {
                       <tr key={u._id} className="hover:bg-gray-50 transition-colors border-b last:border-none">
                         <td className="p-4 flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                            {u.imageUrl ? <img src={`${SERVER_URL}${u.imageUrl}`} alt="" className="w-full h-full object-cover" /> : <User size={16} className="text-gray-500" />}
+                            {u.imageUrl ? <img src={getImageUrl(u.imageUrl)} alt="" className="w-full h-full object-cover" /> : <User size={16} className="text-gray-500" />}
                           </div>
                           <div>
                             <p className="font-bold">{u.name}</p>
@@ -1323,7 +1313,7 @@ const AdminPanel = ({ user }) => {
               <div className="mb-8 bg-gray-50 p-6 rounded-lg border border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4 w-full">
                   <div className="w-20 h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden">
-                    {companyData.logoUrl ? <img src={`${SERVER_URL}${companyData.logoUrl}`} alt="Logo" className="w-full h-full object-contain" /> : <ImageIcon className="text-gray-400" />}
+                    {companyData.logoUrl ? <img src={getImageUrl(companyData.logoUrl)} alt="Logo" className="w-full h-full object-contain" /> : <ImageIcon className="text-gray-400" />}
                   </div>
                   <div>
                     <p className="font-bold text-gray-800">Logo de la Empresa</p>
@@ -1400,15 +1390,15 @@ const Login = ({ setUser }) => {
         
         {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 text-sm rounded">{error}</div>}
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-            <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="ejemplo@ferrecenter.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="ejemplo@ferrecenter.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm pr-10" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+              <input type={showPassword ? "text" : "password"} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm pr-10" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)} 
@@ -1467,7 +1457,7 @@ const ForgotPassword = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-            <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="ejemplo@ferrecenter.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="ejemplo@ferrecenter.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-ferreDark to-[#1a1a1a] text-white py-3.5 rounded-lg hover:from-ferreRed hover:to-[#991116] font-bold transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50">
             {loading ? 'Enviando...' : 'Enviar Solicitud'}
@@ -1523,11 +1513,11 @@ const ResetPassword = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nueva Contraseña</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="••••••••" required />
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="••••••••" required autoComplete="new-password" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Nueva Contraseña</label>
-                        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="••••••••" required />
+                        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="••••••••" required autoComplete="new-password" />
                     </div>
                     <button type="submit" className="w-full bg-gradient-to-r from-ferreDark to-[#1a1a1a] text-white py-3.5 rounded-lg hover:from-ferreRed hover:to-[#991116] font-bold transition-all duration-300 shadow-lg hover:shadow-xl mt-2">
                         Actualizar Contraseña
@@ -1596,12 +1586,12 @@ const Register = ({ setUser }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-            <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="ejemplo@ferrecenter.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input type="email" className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm" placeholder="ejemplo@ferrecenter.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm pr-10" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+              <input type={showPassword ? "text" : "password"} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm pr-10" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="new-password" />
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)} 
@@ -1614,7 +1604,7 @@ const Register = ({ setUser }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
             <div className="relative">
-              <input type={showConfirmPassword ? "text" : "password"} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm pr-10" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+              <input type={showConfirmPassword ? "text" : "password"} className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-ferreRed focus:border-transparent outline-none transition shadow-sm pr-10" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
               <button 
                 type="button" 
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
@@ -1682,44 +1672,76 @@ function App() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('userInfo')) || null);
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [animatingItem, setAnimatingItem] = useState(null);
+  const cartIconRef = useRef(null);
 
-  const addToCart = (product) => {
+  const addToCart = (product, e) => {
+    // Normalizar el ID para asegurar una comparación precisa
+    const productId = product.id || product._id;
+
     if (product.stock <= 0) {
       alert('Este producto está agotado.');
       return;
     }
+
+    // --- Lógica de Animación ---
+    if (e && cartIconRef.current) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const cartRect = cartIconRef.current.getBoundingClientRect();
+
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+
+      setAnimatingItem({
+        id: Date.now(),
+        imageUrl: getImageUrl(product.imageUrl),
+        startX: rect.left + rect.width / 2,
+        startY: rect.top + rect.height / 2,
+        endX: cartRect.left + cartRect.width / 2,
+        endY: cartRect.top + cartRect.height / 2,
+      });
+
+      // Limpiar animación después de que termine (800ms)
+      setTimeout(() => {
+        setAnimatingItem(null);
+      }, 800);
+    }
+
     setCart(prevCart => {
-      const exist = prevCart.find(item => item._id === product._id);
+      const exist = prevCart.find(item => (item.id || item._id) === productId);
       if (exist) {
-        // Si el producto ya está, incrementa la cantidad si no excede el stock
+        // AGREGACIÓN: Si ya existe, sumamos a la cantidad actual
         const newQty = exist.qty + 1;
         if (newQty > product.stock) {
-          alert(`No puedes agregar más de ${product.stock} unidades de este producto.`);
+          alert(`Stock máximo alcanzado (${product.stock} unidades).`);
           return prevCart;
         }
         return prevCart.map(item =>
-          item._id === product._id ? { ...item, qty: newQty } : item
+          (item.id || item._id) === productId ? { ...item, qty: newQty } : item
         );
       } else {
-        // Si es un producto nuevo, lo agrega con cantidad 1
+        // Si es nuevo, lo agregamos con qty: 1
         return [...prevCart, { ...product, qty: 1 }];
       }
     });
   };
 
   const removeFromCart = (productId) => {
-    setCart(prevCart => prevCart.filter(item => item._id !== productId));
+    setCart(prevCart => prevCart.filter(item => (item.id || item._id) !== productId));
   };
 
   const updateCartQty = (productId, qty) => {
     const numQty = parseInt(qty, 10);
+    if (isNaN(numQty)) return;
+
     setCart(prevCart =>
       prevCart.map(item => {
-        if (item._id === productId) {
+        const currentId = item.id || item._id;
+        if (currentId === productId) {
           if (numQty > 0 && numQty <= item.stock) {
             return { ...item, qty: numQty };
           } else if (numQty > item.stock) {
-            alert(`Solo hay ${item.stock} unidades disponibles.`);
+            alert(`Solo hay ${item.stock} unidades disponibles en inventario.`);
             return { ...item, qty: item.stock };
           }
         }
@@ -1735,15 +1757,71 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <style>
+        {`
+          @keyframes flyToCart {
+            0% {
+              transform: translate(0, 0) scale(1);
+              opacity: 1;
+            }
+            20% {
+              transform: translate(0, -20px) scale(1.1);
+              opacity: 1;
+            }
+            100% {
+              transform: translate(var(--tx), var(--ty)) scale(0.1);
+              opacity: 0;
+            }
+          }
+          .floating-product {
+            position: fixed;
+            top: var(--startY);
+            left: var(--startX);
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            z-index: 9999;
+            pointer-events: none;
+            background: white;
+            border-radius: 50%;
+            padding: 5px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: flyToCart 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+          }
+        `}
+      </style>
       <div className="min-h-screen bg-ferreLight font-sans text-gray-800 flex flex-col">
-        <Navbar user={user} cartCount={cart.reduce((acc, item) => acc + (item.qty || 0), 0)} logout={logout} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Navbar 
+          user={user} 
+          cartCount={cart.reduce((acc, item) => acc + (item.qty || 0), 0)} 
+          logout={logout} 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          cartIconRef={cartIconRef}
+        />
+
+        {animatingItem && (
+          <img
+            key={animatingItem.id}
+            src={animatingItem.imageUrl}
+            className="floating-product"
+            style={{
+              '--startX': `${animatingItem.startX - 30}px`,
+              '--startY': `${animatingItem.startY - 30}px`,
+              '--tx': `${animatingItem.endX - animatingItem.startX}px`,
+              '--ty': `${animatingItem.endY - animatingItem.startY}px`,
+            }}
+            alt=""
+          />
+        )}
+
         <div className="flex-grow">
           <Routes>
             <Route path="/" element={<Home addToCart={addToCart} searchTerm={searchTerm} />} />
             <Route path="/nosotros" element={<Nosotros />} />
             <Route path="/catalogo" element={<Catalogo addToCart={addToCart} searchTerm={searchTerm} />} />
-            <Route path="/cotizar" element={<Cotizar />} />
+            <Route path="/cotizar" element={user ? <Cotizar user={user} /> : <Navigate to="/login" />} />
             <Route path="/ofertas" element={<Ofertas addToCart={addToCart} />} />
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/profile" element={user ? <UserProfile user={user} setUser={setUser} /> : <Navigate to="/login" />} />

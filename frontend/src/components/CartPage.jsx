@@ -6,12 +6,23 @@ import { ShoppingCart, Trash2, CreditCard, UploadCloud, FileCheck, Loader } from
 const SERVER_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const API = axios.create({ baseURL: `${SERVER_URL}/api` });
 
+// Helper para manejar URLs de imágenes (Supabase vs Local)
+const getImageUrl = (url) => {
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${SERVER_URL}${url}`;
+};
+
 const CartPage = ({ cart, user, removeFromCart, setCart, updateCartQty }) => {
   const [proof, setProof] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  // Función para obtener el precio real que se debe cobrar (Oferta vs Normal)
+  const getItemPrice = (item) => {
+    return (item.isOffer && item.offerPrice) ? item.offerPrice : item.price;
+  };
 
   const handleFileChange = (e) => {
     setProof(e.target.files[0]);
@@ -40,13 +51,13 @@ const CartPage = ({ cart, user, removeFromCart, setCart, updateCartQty }) => {
     setError('');
     setSuccess('');
 
-    const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    const totalPrice = cart.reduce((acc, item) => acc + (getItemPrice(item) * item.qty), 0);
     const orderItems = cart.map(item => ({
       name: item.name,
       qty: item.qty,
-      image: item.imageUrl,
-      price: item.price,
-      product: item._id
+      imageUrl: item.imageUrl, // Sincronizado con el backend (image_url)
+      price: getItemPrice(item), // Enviamos el precio de oferta al backend
+      product: item._id || item.id
     }));
 
     try {
@@ -77,7 +88,7 @@ const CartPage = ({ cart, user, removeFromCart, setCart, updateCartQty }) => {
     }
   };
 
-  const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const total = cart.reduce((acc, item) => acc + (getItemPrice(item) * item.qty), 0);
 
   return (
     <div className="container mx-auto p-4 md:p-6 max-w-5xl">
@@ -99,20 +110,33 @@ const CartPage = ({ cart, user, removeFromCart, setCart, updateCartQty }) => {
             ) : (
               <div className="space-y-4">
                 {cart.map((item) => (
-                  <div key={item._id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div key={item._id || item.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <div className="w-20 h-20 bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                      <img src={`${SERVER_URL}${item.imageUrl}`} alt={item.name} className="h-full w-full object-contain" onError={(e) => e.target.src = 'https://via.placeholder.com/100'} />
+                      <img 
+                        src={getImageUrl(item.imageUrl)} 
+                        alt={item.name} 
+                        className="h-full w-full object-contain select-none pointer-events-none" 
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable="false"
+                        onError={(e) => e.target.src = 'https://via.placeholder.com/100'} 
+                      />
                     </div>
                     <div className="flex-grow">
                       <h4 className="font-bold text-gray-800">{item.name}</h4>
                       <p className="text-sm text-gray-500">{item.category}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-700">Precio Unit: <span className="text-ferreRed">${getItemPrice(item).toLocaleString('es-CO')}</span></span>
+                        {item.isOffer && (
+                          <span className="text-xs text-gray-400 line-through decoration-gray-400/50">${item.price.toLocaleString('es-CO')}</span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <label htmlFor={`qty-${item._id}`} className="text-sm font-medium text-gray-600">Cantidad:</label>
+                        <label htmlFor={`qty-${item._id || item.id}`} className="text-sm font-medium text-gray-600">Cantidad:</label>
                         <input
-                          id={`qty-${item._id}`}
+                          id={`qty-${item._id || item.id}`}
                           type="number"
                           value={item.qty}
-                          onChange={(e) => updateCartQty(item._id, e.target.value)}
+                          onChange={(e) => updateCartQty(item._id || item.id, e.target.value)}
                           min="1"
                           max={item.stock}
                           className="w-20 p-1 border border-gray-300 rounded-md text-center focus:ring-2 focus:ring-ferreRed outline-none"
@@ -120,8 +144,13 @@ const CartPage = ({ cart, user, removeFromCart, setCart, updateCartQty }) => {
                       </div>
                     </div>
                     <div className="w-full sm:w-auto flex justify-between items-center sm:block sm:text-right mt-2 sm:mt-0">
-                      <p className="font-bold text-lg">${(item.price * item.qty).toLocaleString('es-CO')}</p>
-                      <button onClick={() => removeFromCart(item._id)} className="text-red-500 text-sm hover:underline flex items-center gap-1 justify-end mt-1">
+                      <div className="flex flex-col sm:items-end">
+                        <p className="font-bold text-lg text-ferreRed">${(getItemPrice(item) * item.qty).toLocaleString('es-CO')}</p>
+                        {item.isOffer && (
+                          <p className="text-xs text-gray-400 line-through decoration-red-500/50">${(item.price * item.qty).toLocaleString('es-CO')}</p>
+                        )}
+                      </div>
+                      <button onClick={() => removeFromCart(item._id || item.id)} className="text-red-500 text-sm hover:underline flex items-center gap-1 justify-end mt-1">
                         <Trash2 size={14} /> Eliminar
                       </button>
                     </div>

@@ -1,7 +1,7 @@
 // backend/server.js
 const path = require('path');
 const express = require('express');
-const mongoose = require('mongoose');
+const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -23,18 +23,31 @@ const app = express();
 app.use(express.json());
 // Permite solicitudes desde el frontend (CORS)
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || '*', // En producción, define FRONTEND_URL con tu dominio real
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'https://ferrecenter-web.vercel.app', // Tu URL de Vercel
+      /\.vercel\.app$/ // Permite cualquier subdominio de vercel para pruebas
+    ];
+    if (!origin || allowedOrigins.some(o => typeof o === 'string' ? o === origin : o.test(origin))) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 
-// --- Conexión a Base de Datos (MongoDB) ---
-// Nota: Si no tienes una variable definida, intentará conectar a local
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/ferrecenter';
+// --- Conexión a Supabase ---
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Usamos Service Role para operaciones admin
+);
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('✅ Base de datos MongoDB conectada exitosamente'))
-  .catch((err) => console.error('❌ Error al conectar a MongoDB:', err));
+app.set('supabase', supabase);
+console.log('✅ Conexión con Supabase configurada');
 
 // --- Rutas de la API ---
 app.use('/api/users', userRoutes);
@@ -45,13 +58,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/company', companyRoutes);
 
-// --- Hacer pública la carpeta uploads ---
-// En Render, aseguramos que la carpeta exista para evitar errores al subir imágenes
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-app.use('/uploads', express.static(uploadsDir));
+// --- Manejo de archivos estáticos (Deshabilitado en Vercel Serverless) ---
+// Nota: Deberás migrar a Supabase Storage para las imágenes
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- Ruta de Prueba ---
 app.get('/', (req, res) => {
@@ -59,7 +68,11 @@ app.get('/', (req, res) => {
 });
 
 // --- Iniciar Servidor ---
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor local en puerto ${PORT}`);
+  });
+}
+
+module.exports = app;
