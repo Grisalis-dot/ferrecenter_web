@@ -1847,7 +1847,7 @@ function App() {
               <ul className="space-y-2 text-gray-400 text-sm">
                 <li><Link to="/nosotros" className="hover:text-white">Nosotros</Link></li>
                 <li><Link to="/catalogo" className="hover:text-white">Catálogo</Link></li>
-                <li><Link to="/cotizar" className="hover:text-white">Cotizar</Link></li>
+                {user && <li><Link to="/cotizar" className="hover:text-white">Cotizar</Link></li>}
                 <li><Link to="/ofertas" className="hover:text-white">Ofertas</Link></li>
                 <li><Link to="/contacto" className="hover:text-white">Contacto</Link></li>
               </ul>
